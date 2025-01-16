@@ -1,0 +1,54 @@
+name: Build & Deploy React Application
+
+on: 
+  push:
+    branches:
+      - dev
+      - uat
+
+env:
+  CI: false
+
+jobs:
+  build:
+    name: Build
+    run-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: action/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instal dependency
+        run: npm install
+
+      - name: Upload production-ready build file
+        uses: actions/upload-actiact@v3 
+        with: 
+          name: production-files
+          path: ./build
+
+deploy:
+  name: Deploy
+  needs: build
+  runs-on: ubuntu-latest
+  if: ${{ github.ref == 'refs/heads/main' }}
+
+  steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: production-file
+        path: ./build
+
+    - name: Deploy to Guthub pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.TOKEN }}
+        publish_dir: ./build
+  
